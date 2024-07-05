@@ -16,7 +16,7 @@ spec:
       volumes:
       -name: log-data
        persistentVolumeClaim:
-        claimName: log-data-volume-claim
+         claimName: log-data-volume-claim
       -name: nginx-data
         emptyDir: {}
       containers:
