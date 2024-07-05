@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+
+kind: Deployment
+
+metadata:
+  name: web-deployment
+  namespace: web
+
+spec:
+  replicas: 3 
+  template:
+    metadata:
+      labels:
+        component: wishlist-app
+    spec:
+      volumes:
+      -name: log-data
+       persistentVolumeClaim:
+        claimName: log-data-volume-claim
+      -name: nginx-data
+        emptyDir: {}
+      containers:
+        - name: wishlist-app-container
+          image: andj712/lista-zelja:v1
+          volumeMounts:
+            -mounthPath: /var/log/nginx
+             name: nginx-data
+          ports:
+          - containerPort: 80
+          env:
+            - name: REDIS_HOST
+              value: redis-service
+            - name: REDIS_PORT
+              value: '6379'
+            - name: POSTGRES_HOST
+              value: postgres-service
+            - name: POSTGRES_USER
+              value: hello_flask
+            - name: POSTGRES_PORT
+              value: '5432'
+            - name: POSTGRES_DB
+              value: hello_flask_db
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: pgpassword
+                  key: PGPASSWORD
+      -name: copy-data
+       image: ubuntu
+       command: ["/bin/sh","-c"]
+       args:
+       - >
+        while true;
+        do
+          sleep 30
+          cp /home/data/access.log home/logs/access.log
+        done
+       volumeMounts:
+        -name: log-data
+         mouthPath: /home/logs
+        -name: nginx-data
+         mouthPath: /home/data
+  selector:
+    matchLabels:
+      component: wishlist-app
